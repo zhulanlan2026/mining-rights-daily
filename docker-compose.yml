@@ -1,0 +1,92 @@
+services:
+  mining-news:
+    build: .
+    command: ["mining-news-mcp", "--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8001"]
+    environment:
+      NEWS_ENABLE_LIVE: "1"
+      LOG_FORMAT: json
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/healthz', timeout=2)",
+        ]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+  mineral-pdf:
+    build: .
+    command: ["mineral-pdf-mcp", "--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8002"]
+    ports:
+      - "8002:8002"
+    environment:
+      LOG_FORMAT: json
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/healthz', timeout=2)",
+        ]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+  lme-price:
+    build: .
+    command: ["lme-price-mcp", "--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8003"]
+    ports:
+      - "8003:8003"
+    environment:
+      LOG_FORMAT: json
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/healthz', timeout=2)",
+        ]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+  briefing:
+    build: .
+    depends_on:
+      mining-news:
+        condition: service_healthy
+      mineral-pdf:
+        condition: service_healthy
+      lme-price:
+        condition: service_healthy
+    environment:
+      MCP_TRANSPORT: http
+      MCP_NEWS_URL: http://mining-news:8001/mcp
+      MCP_PDF_URL: http://mineral-pdf:8002/mcp
+      MCP_PRICE_URL: http://lme-price:8003/mcp
+      NEWS_ENABLE_LIVE: "1"
+      LOG_FORMAT: json
+    command:
+      [
+        "mining-daily-agent",
+        "--transport",
+        "http",
+        "--as-of",
+        "2026-10-28",
+        "--query",
+        "给我生成一份关于 Pilbara 锂矿的今日简报",
+        "--output",
+        "/out/pilbara-lithium-briefing-2026-10-28.md",
+      ]
+    volumes:
+      - ./out:/out

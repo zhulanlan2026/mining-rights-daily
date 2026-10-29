@@ -1,0 +1,52 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R /Resources << /Font << /F1 4 0 R >> >> >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1081 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 48 760 Tm (NI 43-101 TECHNICAL REPORT \(SYNTHETIC DEMONSTRATION FILING\)) Tj
+1 0 0 1 48 746 Tm (Project: Pilgangoora Lithium Operation) Tj
+1 0 0 1 48 732 Tm (Location: Pilbara, Western Australia) Tj
+1 0 0 1 48 718 Tm (Issuer: Mining Rights Daily sample desk) Tj
+1 0 0 1 48 704 Tm (Effective Date: 2024-06-30) Tj
+1 0 0 1 48 690 Tm (Standard: NI 43-101) Tj
+1 0 0 1 48 676 Tm (Disclaimer: Synthetic filing for protocol demonstration. Not a company disclosure.) Tj
+1 0 0 1 48 662 Tm (MINERAL RESOURCES) Tj
+1 0 0 1 48 648 Tm (Cutoff: 0.20 percent Li2O. Resources are inclusive of reserves.) Tj
+1 0 0 1 48 634 Tm (Category Tonnes_Mt Grade_Li2O_pct Contained_Li2O_kt) Tj
+1 0 0 1 48 620 Tm (Measured 8.2 1.41 116) Tj
+1 0 0 1 48 606 Tm (Indicated 108.4 1.26 1366) Tj
+1 0 0 1 48 592 Tm (Inferred 53.1 1.15 611) Tj
+1 0 0 1 48 578 Tm (MINERAL RESERVES) Tj
+1 0 0 1 48 564 Tm (Category Tonnes_Mt Grade_Li2O_pct) Tj
+1 0 0 1 48 550 Tm (Proven 12.4 1.32) Tj
+1 0 0 1 48 536 Tm (Probable 74.8 1.24) Tj
+1 0 0 1 48 522 Tm (Notes: Inferred resources are not mineral reserves.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1444
+%%EOF

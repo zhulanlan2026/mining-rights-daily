@@ -1,0 +1,75 @@
+{
+  "description": "Offline news fixtures written for this agent. They are not wire copy and not company announcements. source_type is fixture and the URL scheme is fixture://.",
+  "articles": [
+    {
+      "id": "pls-shipments-2026-10-28",
+      "title": "Pilgangoora 辉石精矿按周计划装船",
+      "url": "fixture://mining-rights-daily/news/pls-shipments-2026-10-28",
+      "source": "矿权日报样本台",
+      "source_type": "fixture",
+      "published_at": "2026-10-28",
+      "keywords": ["pilbara", "lithium", "pilgangoora", "spodumene"],
+      "body": "Pilbara 的 Pilgangoora 锂矿本周继续按计划向赫德兰港发运辉石精矿，选厂没有报告停机，港口库存处于常态区间。此条为离线样本，不是公司公告。"
+    },
+    {
+      "id": "pls-sales-2026-10-28",
+      "title": "2027 年精矿销售条款仍在谈",
+      "url": "fixture://mining-rights-daily/news/pls-sales-2026-10-28",
+      "source": "矿权日报样本台",
+      "source_type": "fixture",
+      "published_at": "2026-10-28",
+      "keywords": ["pilbara", "lithium", "pilgangoora", "spodumene"],
+      "body": "Pilbara Pilgangoora 的 2027 年辉石精矿销售量仍在商谈。精矿结算价和氢氧化锂参考价不是同一个合约，不能直接对照。此条为离线样本，不是公司公告。"
+    },
+    {
+      "id": "pls-shipments-2026-10-27",
+      "title": "Pilgangoora concentrate shipments stay on the weekly plan",
+      "url": "fixture://mining-rights-daily/news/pls-shipments-2026-10-27",
+      "source": "mining-rights-daily fixture desk",
+      "source_type": "fixture",
+      "published_at": "2026-10-27",
+      "keywords": ["pilbara", "lithium", "pilgangoora", "spodumene"],
+      "body": "The sample desk notes that Pilbara Minerals' Pilgangoora operation loaded spodumene concentrate for Port Hedland this week without a reported plant stoppage. Port inventory was described as inside the usual band. This item is an offline fixture, not a company announcement."
+    },
+    {
+      "id": "pls-offtake-2026-10-27",
+      "title": "Spodumene offtake talks stay open as hydroxide prices drift",
+      "url": "fixture://mining-rights-daily/news/pls-offtake-2026-10-27",
+      "source": "mining-rights-daily fixture desk",
+      "source_type": "fixture",
+      "published_at": "2026-10-27",
+      "keywords": ["pilbara", "lithium", "pilgangoora", "spodumene", "offtake"],
+      "body": "Counterparties are still discussing 2027 offtake volumes for Pilgangoora spodumene. No suspension, force majeure, or heritage stoppage is included in this fixture. Concentrate pricing remains a different contract from any hydroxide reference quote."
+    },
+    {
+      "id": "pls-water-2026-10-26",
+      "title": "Pilbara tenement note mentions routine water monitoring",
+      "url": "fixture://mining-rights-daily/news/pls-water-2026-10-26",
+      "source": "mining-rights-daily fixture desk",
+      "source_type": "fixture",
+      "published_at": "2026-10-26",
+      "keywords": ["pilbara", "lithium", "pilgangoora", "water", "heritage"],
+      "body": "A fixture note says the Pilgangoora site continued routine water monitoring. No spill volume is stated. The heritage survey timetable was not changed in this note."
+    },
+    {
+      "id": "pls-drill-2026-10-10",
+      "title": "Older Pilgangoora drill note sits outside a one-day window",
+      "url": "fixture://mining-rights-daily/news/pls-drill-2026-10-10",
+      "source": "mining-rights-daily fixture desk",
+      "source_type": "fixture",
+      "published_at": "2026-10-10",
+      "keywords": ["pilbara", "lithium", "pilgangoora"],
+      "body": "This older fixture records a completed infill drilling week at Pilgangoora. It is kept so a wider lookback still has a citation, and it should not appear in a one-day briefing for 2026-10-27."
+    },
+    {
+      "id": "copper-other-2026-10-27",
+      "title": "Copper concentrate leaves a different camp",
+      "url": "fixture://mining-rights-daily/news/copper-other-2026-10-27",
+      "source": "mining-rights-daily fixture desk",
+      "source_type": "fixture",
+      "published_at": "2026-10-27",
+      "keywords": ["copper"],
+      "body": "A copper concentrate parcel left an unrelated camp. This fixture exists so a specialty-metal query does not match every item published on the same day."
+    }
+  ]
+}

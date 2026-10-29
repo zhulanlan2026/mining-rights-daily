@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "mining-news": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "D:/Projects/AI面试官/ai-interview-coach/mining-rights-daily",
+        "python",
+        "-m",
+        "mining_rights_daily.servers.news"
+      ]
+    },
+    "mineral-pdf": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "D:/Projects/AI面试官/ai-interview-coach/mining-rights-daily",
+        "python",
+        "-m",
+        "mining_rights_daily.servers.pdf"
+      ]
+    },
+    "lme-price": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "D:/Projects/AI面试官/ai-interview-coach/mining-rights-daily",
+        "python",
+        "-m",
+        "mining_rights_daily.servers.price"
+      ]
+    }
+  }
+}
