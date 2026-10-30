@@ -23,6 +23,10 @@ DEFAULT_HTTP_URLS = {
     "lme-price": "http://127.0.0.1:8003/mcp",
 }
 
+# Longer than ARTICLE_FETCH_TOTAL_SECONDS so a slow PDF returns from the server
+# before the client cancels the tool call.
+TOOL_CALL_TIMEOUT_SECONDS = 120
+
 
 class McpToolBus:
     def __init__(self, clients: dict[str, Client]) -> None:
@@ -67,7 +71,7 @@ async def open_bus(transport: str, urls: dict[str, str] | None = None) -> AsyncI
 async def _enter(target: Any, retries: int) -> Client:
     last: Exception | None = None
     for attempt in range(retries):
-        client = Client(target, read_timeout_seconds=30)
+        client = Client(target, read_timeout_seconds=TOOL_CALL_TIMEOUT_SECONDS)
         try:
             await client.__aenter__()
         except Exception as exc:

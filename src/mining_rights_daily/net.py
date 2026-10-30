@@ -7,6 +7,7 @@ so a public name that later points at an internal address is still possible.
 from __future__ import annotations
 
 import ipaddress
+import time
 
 import httpx
 
@@ -70,16 +71,34 @@ def fetch_limited(
     timeout: float,
     max_bytes: int,
     headers: dict[str, str] | None = None,
+    total_timeout: float | None = None,
 ) -> tuple[bytes, str]:
+    """Download a public URL.
+
+    timeout is the gap allowed between network operations. total_timeout, when
+    set, is the wall-clock budget for the whole download.
+    """
+
+    started = time.monotonic()
+
+    def within_budget() -> None:
+        if total_timeout is None:
+            return
+        if time.monotonic() - started > total_timeout:
+            raise DomainError(f"下载超过 {total_timeout:g} 秒，已中止")
+
     assert_public_http(url)
     try:
+        within_budget()
         with open_client(timeout, headers) as client:
             with client.stream("GET", url) as response:
+                within_budget()
                 response.raise_for_status()
                 content_type = response.headers.get("content-type", "")
                 chunks: list[bytes] = []
                 total = 0
                 for chunk in response.iter_bytes():
+                    within_budget()
                     total += len(chunk)
                     if total > max_bytes:
                         raise DomainError(f"响应超过 {max_bytes} 字节，已中止")

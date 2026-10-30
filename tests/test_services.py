@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import threading
+import time
 from datetime import date
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
@@ -8,7 +11,7 @@ from mining_rights_daily.agent.briefing import BriefingData
 from mining_rights_daily.agent.intent import parse_intent
 from mining_rights_daily.agent.render import render_briefing
 from mining_rights_daily.errors import DomainError
-from mining_rights_daily.net import assert_public_http
+from mining_rights_daily.net import assert_public_http, fetch_limited
 from mining_rights_daily.news.service import (
     _strip_asx_letterhead,
     fetch_article,
@@ -127,10 +130,17 @@ def test_asx_feed_survives_rss_failure(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_fetch_article_reads_pdf(monkeypatch: pytest.MonkeyPatch) -> None:
     pdf = build_sample_pdf()
 
-    def fake_fetch(url: str, *, timeout: float, max_bytes: int) -> tuple[bytes, str]:
+    def fake_fetch(
+        url: str,
+        *,
+        timeout: float,
+        max_bytes: int,
+        total_timeout: float | None = None,
+    ) -> tuple[bytes, str]:
         assert url.startswith("https://asx.api.markitdigital.com/")
         assert timeout > 0
         assert max_bytes >= len(pdf)
+        assert total_timeout is not None and total_timeout >= 90
         return pdf, f"{url} (application/pdf)"
 
     monkeypatch.setattr("mining_rights_daily.news.service.fetch_limited", fake_fetch)
@@ -139,6 +149,51 @@ def test_fetch_article_reads_pdf(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert article.source_type == "announcement"
     assert "Indicated" in article.text
+
+
+def test_article_download_budget_is_shorter_than_the_tool_wait() -> None:
+    from mining_rights_daily.agent.bus import TOOL_CALL_TIMEOUT_SECONDS
+    from mining_rights_daily.news.service import ARTICLE_FETCH_TOTAL_SECONDS
+
+    assert ARTICLE_FETCH_TOTAL_SECONDS >= 90
+    assert ARTICLE_FETCH_TOTAL_SECONDS < TOOL_CALL_TIMEOUT_SECONDS
+
+
+def test_fetch_limited_stops_when_the_download_exceeds_its_total_budget(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("mining_rights_daily.net.assert_public_http", lambda url: url)
+
+    class SlowHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            body = b"x" * 20_000
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            for offset in range(0, len(body), 1000):
+                time.sleep(0.05)
+                self.wfile.write(body[offset : offset + 1000])
+                self.wfile.flush()
+
+        def log_message(self, fmt: str, *args: object) -> None:
+            return
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), SlowHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    port = server.server_address[1]
+    try:
+        with pytest.raises(DomainError, match="下载超过"):
+            fetch_limited(
+                f"http://127.0.0.1:{port}/slow.bin",
+                timeout=5,
+                max_bytes=5_000_000,
+                total_timeout=0.2,
+            )
+    finally:
+        server.shutdown()
+        server.server_close()
 
 
 def test_announcement_is_labeled_in_the_briefing() -> None:

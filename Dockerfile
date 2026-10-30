@@ -1,6 +1,13 @@
 FROM python:3.12-slim-bookworm
 
-RUN pip install --no-cache-dir uv==0.7.13 \
+ENV TZ=Asia/Shanghai
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tzdata \
+    && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo Asia/Shanghai > /etc/timezone \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir uv==0.7.13 \
     && useradd --create-home --uid 1000 --shell /usr/sbin/nologin app
 
 WORKDIR /app

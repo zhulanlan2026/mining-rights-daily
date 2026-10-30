@@ -3,6 +3,7 @@ services:
     build: .
     command: ["mining-news-mcp", "--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8001"]
     environment:
+      TZ: Asia/Shanghai
       NEWS_ENABLE_LIVE: "1"
       LOG_FORMAT: json
     ports:
@@ -26,6 +27,7 @@ services:
     ports:
       - "8002:8002"
     environment:
+      TZ: Asia/Shanghai
       LOG_FORMAT: json
     healthcheck:
       test:
@@ -46,6 +48,7 @@ services:
     ports:
       - "8003:8003"
     environment:
+      TZ: Asia/Shanghai
       LOG_FORMAT: json
     healthcheck:
       test:
@@ -70,6 +73,7 @@ services:
       lme-price:
         condition: service_healthy
     environment:
+      TZ: Asia/Shanghai
       MCP_TRANSPORT: http
       MCP_NEWS_URL: http://mining-news:8001/mcp
       MCP_PDF_URL: http://mineral-pdf:8002/mcp
@@ -81,12 +85,10 @@ services:
         "mining-daily-agent",
         "--transport",
         "http",
-        "--as-of",
-        "2026-10-28",
         "--query",
         "给我生成一份关于 Pilbara 锂矿的今日简报",
         "--output",
-        "/out/pilbara-lithium-briefing-2026-10-28.md",
+        "/out/pilbara-lithium-briefing.md",
       ]
     volumes:
       - ./out:/out

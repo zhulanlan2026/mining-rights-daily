@@ -18,6 +18,7 @@ from mining_rights_daily.net import fetch_limited, iter_text_preview
 from mining_rights_daily.paths import NEWS_PATH
 
 MAX_DAYS = 800
+ARTICLE_FETCH_TOTAL_SECONDS = 90
 LIVE_FEED = "https://www.mining.com/feed/"
 RSS_HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; mining-rights-daily/0.1)",
@@ -144,7 +145,12 @@ def fetch_article(url: str) -> Article:
         raise DomainError(f"语料里没有这篇文章: {target}")
     if not target.startswith(("http://", "https://")):
         raise DomainError("fetch_article 只接受 fixture://、http:// 或 https://")
-    payload, _detail = fetch_limited(target, timeout=8, max_bytes=5_000_000)
+    payload, _detail = fetch_limited(
+        target,
+        timeout=8,
+        max_bytes=5_000_000,
+        total_timeout=ARTICLE_FETCH_TOTAL_SECONDS,
+    )
     if payload.startswith(b"%PDF"):
         text = _pdf_to_text(payload)
         source_type = "announcement" if "asx.api.markitdigital.com" in target else "pdf"
