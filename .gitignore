@@ -13,3 +13,8 @@ wheels/
 out/
 .pytest_cache/
 .ruff_cache/
+
+# Local probe / one-off rebuild helpers
+scripts/_*
+scripts/compose-1029.yml
+scripts/Dockerfile.from-local

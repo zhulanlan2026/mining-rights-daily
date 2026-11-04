@@ -34,7 +34,7 @@ def render_briefing(data: BriefingData) -> str:
         "",
         f"- 简报日: {intent.as_of.isoformat()}",
         f"- 问题: {intent.raw_query}",
-        "- 编排: 脚本化 ReAct。数字只来自 MCP 工具返回值，写稿步骤不另行估算储量或价格。",
+        "- 编排: LangGraph。数字只来自 MCP 工具返回值，写稿步骤不另行估算储量或价格。",
         "",
         "## 新闻摘要",
         "",
@@ -64,9 +64,16 @@ def render_briefing(data: BriefingData) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _unavailable(kind: str, detail: str) -> str:
+    text = detail.strip()
+    if text.startswith("未获取到数据"):
+        return text
+    return f"未获取到数据。{kind}: {text}"
+
+
 def _news_section(data: BriefingData) -> list[str]:
     if data.news_error:
-        return [f"新闻工具失败: {data.news_error}"]
+        return [_unavailable("新闻工具失败", data.news_error)]
     if not data.news or not data.news.get("items"):
         return ["扩大到 800 天后仍然没有匹配新闻。"]
     window = data.news
@@ -108,7 +115,7 @@ def _resource_section(data: BriefingData) -> list[str]:
     if data.intent.report_url is None:
         return ["报告目录里没有这个标的的 NI 43-101，本段没有储量数字。"]
     if data.resources_error:
-        return [f"PDF 工具失败: {data.resources_error}"]
+        return [_unavailable("PDF 工具失败", data.resources_error)]
     report = data.resources or {}
     lines: list[str] = []
     if report.get("is_synthetic"):
@@ -154,7 +161,7 @@ def _price_section(data: BriefingData) -> list[str]:
         return ["问句里没有识别出商品，本段没有价格。"]
     lines: list[str] = []
     if data.price_error:
-        lines.append(f"价格工具失败: {data.price_error}")
+        lines.append(_unavailable("价格工具失败", data.price_error))
     elif data.price:
         quote = data.price
         lines.extend(
@@ -170,7 +177,7 @@ def _price_section(data: BriefingData) -> list[str]:
             lines.append(f"- 说明: {quote['note']}")
         lines.append(f"- 免责声明: {quote.get('disclaimer')}")
     if data.trend_error:
-        lines.append(f"走势工具失败: {data.trend_error}")
+        lines.append(_unavailable("走势工具失败", data.trend_error))
     elif data.trend:
         trend = data.trend
         direction = _DIRECTION.get(str(trend.get("direction")), str(trend.get("direction")))

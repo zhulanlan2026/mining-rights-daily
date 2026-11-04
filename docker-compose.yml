@@ -80,6 +80,9 @@ services:
       MCP_PRICE_URL: http://lme-price:8003/mcp
       NEWS_ENABLE_LIVE: "1"
       LOG_FORMAT: json
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
     command:
       [
         "mining-daily-agent",

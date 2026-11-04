@@ -5,7 +5,7 @@
       "args": [
         "run",
         "--directory",
-        "D:/Projects/AI面试官/ai-interview-coach/mining-rights-daily",
+        "D:/Projects/mining-rights-daily",
         "python",
         "-m",
         "mining_rights_daily.servers.news"
@@ -16,7 +16,7 @@
       "args": [
         "run",
         "--directory",
-        "D:/Projects/AI面试官/ai-interview-coach/mining-rights-daily",
+        "D:/Projects/mining-rights-daily",
         "python",
         "-m",
         "mining_rights_daily.servers.pdf"
@@ -27,7 +27,7 @@
       "args": [
         "run",
         "--directory",
-        "D:/Projects/AI面试官/ai-interview-coach/mining-rights-daily",
+        "D:/Projects/mining-rights-daily",
         "python",
         "-m",
         "mining_rights_daily.servers.price"

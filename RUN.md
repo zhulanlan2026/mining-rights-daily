@@ -2,7 +2,7 @@
 
 简报问题固定为：`给我生成一份关于 Pilbara 锂矿的今日简报`。
 
-输出是一份 Markdown，包含新闻摘要、NI 43-101 储量、参考价格走势、风险提示和引用。数字只来自三个 MCP 工具，不需要大模型 API key。
+输出是一份 Markdown，包含新闻摘要、NI 43-101 储量、参考价格走势、风险提示和引用。价格、储量和新闻里的数字只来自三个 MCP 工具。不配置密钥时，这些章节由模板直接生成。配置 `DEEPSEEK_API_KEY` 后，DeepSeek（默认模型 `deepseek-chat`）只补「简要研判」，并在规则无法归类时做意图分类。
 
 ## 这条命令不需要 Docker
 
@@ -70,7 +70,56 @@ python -m mining_rights_daily.servers.pdf
 python -m mining_rights_daily.servers.price
 ```
 
-Claude 或 Cursor 自己就是编排端，可以直接调用这些工具。本仓库的 `mining-daily-agent` 是不依赖模型密钥的编排端，方便在终端复现同一份简报。
+Claude 或 Cursor 自己就是编排端，可以直接调用这些工具。本仓库的 `mining-daily-agent` 在没有 DeepSeek 密钥时也能复现同一份简报。
+
+## 编排
+
+主图只做意图和路由。日报子图按固定顺序取数：`search` → `fetch_article` → `extract_resources` → `get_price` + `get_trend`，然后按 `src/mining_rights_daily/skills/mining-daily-report/SKILL.md` 写 Markdown。单独问价格、走势、新闻或储量时，不进入日报子图。
+
+续聊把会话写进 SQLite。同一 `--thread-id` 可以问上一轮结果：
+
+```powershell
+uv run mining-daily-agent --query "给我生成一份关于 Pilbara 锂矿的今日简报" --as-of 2026-10-28 --thread-id pilbara --checkpoint out/checkpoints.sqlite
+uv run mining-daily-agent --query "上一轮简报是哪一天" --thread-id pilbara --checkpoint out/checkpoints.sqlite
+```
+
+DeepSeek 使用 OpenAI 兼容接口，地址默认 `https://api.deepseek.com`，模型默认 `deepseek-chat`。研判里如果出现工具结果中没有的数字，这一节会被丢弃。
+
+```powershell
+$env:DEEPSEEK_API_KEY = "<your-key>"
+$env:DEEPSEEK_MODEL = "deepseek-chat"
+```
+
+本地流式输出：
+
+```powershell
+uv run mining-daily-agent --serve --port 8765
+```
+
+然后请求 `http://127.0.0.1:8765/v1/briefing?query=生成%20Pilbara%20锂矿今日简报&thread_id=pilbara`。响应是 `text/event-stream`：先推节点进度，最后一条 `event: report` 是整篇 Markdown。
+
+## 企业微信
+
+对话入口是企业微信自建应用，不是小程序。在应用里给「接收消息」配置一个公网 HTTPS 地址，指向本机回调：
+
+```text
+https://你的域名/wecom/callback
+```
+
+接收方式选安全模式。本地先起服务：
+
+```powershell
+$env:WECOM_CORP_ID = "<企业ID>"
+$env:WECOM_AGENT_ID = "<应用ID>"
+$env:WECOM_SECRET = "<应用Secret>"
+$env:WECOM_TOKEN = "<接收消息Token>"
+$env:WECOM_ENCODING_AES_KEY = "<43位EncodingAESKey>"
+uv run mining-daily-agent --wecom --port 8780
+```
+
+企业微信把用户的一句话发到这个地址。服务立刻回复 `success`，再在原会话里先发「正在生成，请稍等。」，生成结束后把简报按段发回。同一个人的后续问题共用会话 `wecom:<用户ID>`。简报超过企业微信单条长度时会分成多条。
+
+五个配置只放在环境变量里，不要写进仓库，也不要贴到聊天记录。本机没有公网地址时，用隧道把 `127.0.0.1:8780` 转到上面的 HTTPS 地址。三个 MCP 已在 compose 里运行时，加上 `$env:MCP_TRANSPORT = "http"`。
 
 单独看 HTTP 端口时：
 
