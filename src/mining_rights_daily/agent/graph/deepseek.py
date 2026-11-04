@@ -5,7 +5,13 @@ from typing import Any
 
 import httpx
 
-from mining_rights_daily.agent.graph.config import DeepSeekConfig, deepseek_config
+from mining_rights_daily.agent.graph.config import (
+    DeepSeekConfig,
+    deepseek_config,
+    tool_retry_attempts,
+    tool_retry_base_delay,
+)
+from mining_rights_daily.agent.graph.retry import current_budget, with_retry
 from mining_rights_daily.agent.graph.skill import load_skill
 
 _NUMBER = re.compile(r"\d+(?:\.\d+)?")
@@ -34,6 +40,18 @@ class DeepSeekClient:
         return cls(config, transport)
 
     async def complete(self, system: str, user: str) -> str:
+        async def once() -> str:
+            return await self._complete_once(system, user)
+
+        return await with_retry(
+            once,
+            max_attempts=tool_retry_attempts(),
+            base_delay=tool_retry_base_delay(),
+            budget=current_budget(),
+            label="DeepSeek",
+        )
+
+    async def _complete_once(self, system: str, user: str) -> str:
         url = f"{self.config.base_url}/chat/completions"
         payload = {
             "model": self.config.model,

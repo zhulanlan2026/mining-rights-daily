@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from datetime import date
 from pathlib import Path
@@ -7,6 +8,7 @@ from typing import Any
 
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
+from mining_rights_daily.agent.graph.config import request_budget_seconds
 from mining_rights_daily.agent.graph.deepseek import DeepSeekClient
 from mining_rights_daily.agent.graph.main_graph import compile_main
 from mining_rights_daily.agent.graph.mcp_connector import (
@@ -15,6 +17,7 @@ from mining_rights_daily.agent.graph.mcp_connector import (
     reset_bus,
     reset_model,
 )
+from mining_rights_daily.agent.graph.retry import RequestBudget, bind_budget, reset_budget
 from mining_rights_daily.agent.protocol import ToolBus
 
 
@@ -45,8 +48,10 @@ async def stream_turn(
     path = Path(checkpoint_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     client = DeepSeekClient.from_env() if deepseek is None else deepseek
+    deadline = asyncio.get_running_loop().time() + request_budget_seconds()
     bus_token = bind_bus(bus)
     model_token = bind_model(client)
+    budget_token = bind_budget(RequestBudget(deadline=deadline))
     final = ""
     try:
         async with AsyncSqliteSaver.from_conn_string(str(path)) as saver:
@@ -60,6 +65,7 @@ async def stream_turn(
                     if chosen.strip():
                         final = chosen
     finally:
+        reset_budget(budget_token)
         reset_bus(bus_token)
         reset_model(model_token)
     if final and not final.endswith("\n"):

@@ -85,6 +85,8 @@ uv run mining-daily-agent --query "上一轮简报是哪一天" --thread-id pilb
 
 DeepSeek 使用 OpenAI 兼容接口，地址默认 `https://api.deepseek.com`，模型默认 `deepseek-chat`。研判里如果出现工具结果中没有的数字，这一节会被丢弃。
 
+MCP 工具与 DeepSeek 调用默认最多重试 3 次（指数退避）。超时、连接失败、HTTP 429/5xx 会重试；参数错误、401/403/404 等不重试。整次请求还有总时长预算（默认 240 秒），用尽后不再重试并走「未获取到数据」降级。可用环境变量调整：`AGENT_TOOL_RETRIES`、`AGENT_TOOL_RETRY_DELAY`、`AGENT_REQUEST_BUDGET`、`AGENT_TOOL_TIMEOUT`。
+
 ```powershell
 $env:DEEPSEEK_API_KEY = "<your-key>"
 $env:DEEPSEEK_MODEL = "deepseek-chat"

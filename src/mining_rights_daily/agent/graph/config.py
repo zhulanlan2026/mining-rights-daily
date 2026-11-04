@@ -35,3 +35,15 @@ def checkpoint_path(explicit: str | None = None) -> Path:
 
 def tool_timeout_seconds() -> float:
     return float(os.environ.get("AGENT_TOOL_TIMEOUT", "120"))
+
+
+def tool_retry_attempts() -> int:
+    return max(1, int(os.environ.get("AGENT_TOOL_RETRIES", "3")))
+
+
+def tool_retry_base_delay() -> float:
+    return float(os.environ.get("AGENT_TOOL_RETRY_DELAY", "0.5"))
+
+
+def request_budget_seconds() -> float:
+    return float(os.environ.get("AGENT_REQUEST_BUDGET", "240"))
