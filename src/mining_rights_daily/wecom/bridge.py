@@ -6,11 +6,13 @@ from datetime import date
 from pathlib import Path
 
 from mining_rights_daily.agent.bus import open_bus
+from mining_rights_daily.agent.graph.checkpoint import CheckpointConfig
 from mining_rights_daily.agent.graph.run import run_turn
 from mining_rights_daily.wecom.client import WeComApiError, WeComClient
 
 _LOG = logging.getLogger("mining_rights_daily.wecom")
 Runner = Callable[[str, str], Awaitable[str]]
+Checkpoint = CheckpointConfig | Path
 
 
 async def answer_user(client: WeComClient, user_id: str, content: str, run: Runner) -> None:
@@ -29,7 +31,7 @@ async def answer_user(client: WeComClient, user_id: str, content: str, run: Runn
 def briefing_runner(
     transport: str,
     urls: dict[str, str],
-    checkpoint: Path,
+    checkpoint: Checkpoint,
 ) -> Runner:
     async def run(user_id: str, content: str) -> str:
         async with open_bus(transport, urls) as bus:

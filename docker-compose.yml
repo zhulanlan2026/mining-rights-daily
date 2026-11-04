@@ -63,6 +63,23 @@ services:
       retries: 20
       start_period: 5s
 
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: mining
+      POSTGRES_PASSWORD: mining
+      POSTGRES_DB: mining
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mining -d mining"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
   briefing:
     build: .
     depends_on:
@@ -72,6 +89,8 @@ services:
         condition: service_healthy
       lme-price:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       TZ: Asia/Shanghai
       MCP_TRANSPORT: http
@@ -80,6 +99,8 @@ services:
       MCP_PRICE_URL: http://lme-price:8003/mcp
       NEWS_ENABLE_LIVE: "1"
       LOG_FORMAT: json
+      AGENT_CHECKPOINT_BACKEND: postgres
+      DATABASE_URL: postgresql://mining:mining@postgres:5432/mining
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
@@ -95,3 +116,6 @@ services:
       ]
     volumes:
       - ./out:/out
+
+volumes:
+  postgres-data:

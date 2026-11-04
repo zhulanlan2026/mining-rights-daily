@@ -10,7 +10,7 @@ from datetime import date
 from pathlib import Path
 
 from mining_rights_daily.agent.bus import DEFAULT_HTTP_URLS, open_bus
-from mining_rights_daily.agent.graph.config import checkpoint_path
+from mining_rights_daily.agent.graph.checkpoint import CheckpointConfig, resolve_checkpoint
 from mining_rights_daily.agent.graph.run import run_turn
 from mining_rights_daily.agent.sse import briefing_producer, serve_forever, start_sse
 from mining_rights_daily.logging import configure_logging
@@ -34,7 +34,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--transport", choices=["stdio", "http"], default=None)
     parser.add_argument("--output", default="-", help="Write Markdown here, or '-' for stdout.")
     parser.add_argument("--thread-id", default=None, help="Conversation id. Reuse it to follow up.")
-    parser.add_argument("--checkpoint", default=None, help="SQLite file for short-term memory.")
+    parser.add_argument(
+        "--checkpoint",
+        default=None,
+        help="SQLite file for short-term memory. Forces sqlite backend when set.",
+    )
     parser.add_argument("--serve", action="store_true", help="Serve SSE at /v1/briefing.")
     parser.add_argument("--wecom", action="store_true", help="Receive Enterprise WeChat messages.")
     parser.add_argument("--host", default="127.0.0.1")
@@ -50,7 +54,11 @@ def main(argv: list[str] | None = None) -> int:
     urls["mining-news"] = args.news_url or os.environ.get("MCP_NEWS_URL", urls["mining-news"])
     urls["mineral-pdf"] = args.pdf_url or os.environ.get("MCP_PDF_URL", urls["mineral-pdf"])
     urls["lme-price"] = args.price_url or os.environ.get("MCP_PRICE_URL", urls["lme-price"])
-    store = checkpoint_path(args.checkpoint)
+    try:
+        store = resolve_checkpoint(args.checkpoint)
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
+        return 2
     if args.serve and args.wecom:
         parser.error("--serve and --wecom cannot be used together")
     if args.serve:
@@ -93,20 +101,25 @@ async def _run(
     as_of: date,
     transport: str,
     urls: dict[str, str],
-    store: Path,
+    store: CheckpointConfig,
     thread_id: str,
 ) -> str:
     async with open_bus(transport, urls) as bus:
         return await run_turn(query, as_of, bus, store, thread_id)
 
 
-async def _serve(transport: str, urls: dict[str, str], store: Path, host: str, port: int) -> None:
+async def _serve(
+    transport: str, urls: dict[str, str], store: CheckpointConfig, host: str, port: int
+) -> None:
     server = await start_sse(host, port, briefing_producer(transport, urls, store))
     print(f"sse http://{host}:{port}/v1/briefing", file=sys.stderr)
+    print(f"checkpoint backend={store.backend}", file=sys.stderr)
     await serve_forever(server)
 
 
-async def _wecom(transport: str, urls: dict[str, str], store: Path, host: str, port: int) -> None:
+async def _wecom(
+    transport: str, urls: dict[str, str], store: CheckpointConfig, host: str, port: int
+) -> None:
     configure_logging("wecom")
     settings = WeComSettings.from_env()
     client = WeComClient(settings.corp_id, settings.secret, settings.agent_id)
@@ -119,6 +132,7 @@ async def _wecom(transport: str, urls: dict[str, str], store: Path, host: str, p
     callback = WeComCallback(settings, on_text)
     server = await start_wecom(host, port, callback)
     print(f"wecom http://{host}:{port}/wecom/callback", file=sys.stderr)
+    print(f"checkpoint backend={store.backend}", file=sys.stderr)
     async with server:
         await server.serve_forever()
 

@@ -76,11 +76,19 @@ Claude 或 Cursor 自己就是编排端，可以直接调用这些工具。本�
 
 主图只做意图和路由。日报子图按固定顺序取数：`search` → `fetch_article` → `extract_resources` → `get_price` + `get_trend`，然后按 `src/mining_rights_daily/skills/mining-daily-report/SKILL.md` 写 Markdown。单独问价格、走势、新闻或储量时，不进入日报子图。
 
-续聊把会话写进 SQLite。同一 `--thread-id` 可以问上一轮结果：
+续聊会话存在 Checkpoint 后端。本机默认 SQLite（`--checkpoint out/checkpoints.sqlite`）。设置 `DATABASE_URL` 后（或 `AGENT_CHECKPOINT_BACKEND=postgres`）改用 PostgreSQL，同一库以后还给 RAG 用，表与 Checkpoint 分开。`docker compose` 已带 `postgres` 服务。
 
 ```powershell
 uv run mining-daily-agent --query "给我生成一份关于 Pilbara 锂矿的今日简报" --as-of 2026-10-28 --thread-id pilbara --checkpoint out/checkpoints.sqlite
 uv run mining-daily-agent --query "上一轮简报是哪一天" --thread-id pilbara --checkpoint out/checkpoints.sqlite
+```
+
+PostgreSQL 示例：
+
+```powershell
+$env:AGENT_CHECKPOINT_BACKEND = "postgres"
+$env:DATABASE_URL = "postgresql://mining:mining@127.0.0.1:5432/mining"
+uv run mining-daily-agent --query "给我生成一份关于 Pilbara 锂矿的今日简报" --thread-id pilbara
 ```
 
 DeepSeek 使用 OpenAI 兼容接口，地址默认 `https://api.deepseek.com`，模型默认 `deepseek-chat`。研判里如果出现工具结果中没有的数字，这一节会被丢弃。

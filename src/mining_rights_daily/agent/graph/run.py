@@ -6,8 +6,11 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-
+from mining_rights_daily.agent.graph.checkpoint import (
+    CheckpointConfig,
+    as_checkpoint_config,
+    open_checkpointer,
+)
 from mining_rights_daily.agent.graph.config import request_budget_seconds
 from mining_rights_daily.agent.graph.deepseek import DeepSeekClient
 from mining_rights_daily.agent.graph.main_graph import compile_main
@@ -25,13 +28,13 @@ async def run_turn(
     query: str,
     as_of: date,
     bus: ToolBus,
-    checkpoint_path: Path,
+    checkpoint: CheckpointConfig | Path,
     thread_id: str,
     deepseek: Any = None,
 ) -> str:
     chunks = [
         item["markdown"]
-        async for item in stream_turn(query, as_of, bus, checkpoint_path, thread_id, deepseek)
+        async for item in stream_turn(query, as_of, bus, checkpoint, thread_id, deepseek)
         if item["event"] == "report"
     ]
     return chunks[-1] if chunks else ""
@@ -41,12 +44,11 @@ async def stream_turn(
     query: str,
     as_of: date,
     bus: ToolBus,
-    checkpoint_path: Path,
+    checkpoint: CheckpointConfig | Path,
     thread_id: str,
     deepseek: Any = None,
 ) -> AsyncIterator[dict[str, str]]:
-    path = Path(checkpoint_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    config = as_checkpoint_config(checkpoint)
     client = DeepSeekClient.from_env() if deepseek is None else deepseek
     deadline = asyncio.get_running_loop().time() + request_budget_seconds()
     bus_token = bind_bus(bus)
@@ -54,11 +56,11 @@ async def stream_turn(
     budget_token = bind_budget(RequestBudget(deadline=deadline))
     final = ""
     try:
-        async with AsyncSqliteSaver.from_conn_string(str(path)) as saver:
+        async with open_checkpointer(config) as saver:
             graph = compile_main(saver)
-            config = {"configurable": {"thread_id": thread_id}}
+            runtime = {"configurable": {"thread_id": thread_id}}
             payload = {"query": query, "as_of": as_of.isoformat()}
-            async for update in graph.astream(payload, config, stream_mode="updates"):
+            async for update in graph.astream(payload, runtime, stream_mode="updates"):
                 for name, node_payload in update.items():
                     yield {"event": "node", "node": str(name)}
                     chosen = _answer(node_payload)
